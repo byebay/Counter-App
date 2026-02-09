@@ -37,10 +37,10 @@ class _CounterViewState extends State<CounterView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("LogBook: SRP Version")),
-      body: Center(
+      body: SingleChildScrollView(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 20),
             const Text("Total Hitungan:"),
             Text('${_controller.value}', style: const TextStyle(fontSize: 40)),
             const SizedBox(height: 40),
@@ -85,7 +85,7 @@ class _CounterViewState extends State<CounterView> {
                     padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
                   ),
                   child: const Text(
-                    '- Kurang',
+                    'Kurang',
                     style: TextStyle(fontSize: 16),
                   ),
                 ),
@@ -107,12 +107,57 @@ class _CounterViewState extends State<CounterView> {
                     padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
                   ),
                   child: const Text(
-                    '+ Tambah',
+                    'Tambah',
                     style: TextStyle(fontSize: 16),
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 40),
+            // Section Riwayat Aktivitas
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Riwayat Aktivitas (5 Terakhir)',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: _controller.history.isEmpty
+                        ? const Text(
+                            'Belum ada aktivitas',
+                            style: TextStyle(color: Colors.grey),
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: _controller.history
+                                .asMap()
+                                .entries
+                                .map((entry) {
+                              String activity = entry.value;
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 5),
+                                child: Text(
+                                  activity,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
