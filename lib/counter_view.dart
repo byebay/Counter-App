@@ -23,6 +23,33 @@ class _CounterViewState extends State<CounterView> {
     super.dispose();
   }
 
+  Future<void> _confirmReset() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Konfirmasi Reset'),
+        content: const Text('Anda yakin ingin mereset counter?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => _controller.reset());
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Counter direset')),
+      );
+    }
+  }
+
   void _updateStep(String value) {
     int? newStep = int.tryParse(value);
     if (newStep != null && newStep > 0) {
@@ -91,7 +118,7 @@ class _CounterViewState extends State<CounterView> {
                 ),
                 const SizedBox(width: 20),
                 ElevatedButton(
-                  onPressed: () => setState(() => _controller.reset()),
+                  onPressed: _confirmReset,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
                   ),
@@ -114,47 +141,55 @@ class _CounterViewState extends State<CounterView> {
               ],
             ),
             const SizedBox(height: 40),
-            // Section Riwayat Aktivitas
-            Container(
+            // Riwayat Aktivitas: dipisah ke Card terpisah
+            const SizedBox(height: 20),
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Riwayat Aktivitas (5 Terakhir)',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              child: Card(
+                elevation: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Riwayat Aktivitas (5 Terakhir)',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        height: 180,
+                        width: double.infinity,
+                        child: _controller.history.isEmpty
+                            ? const Text(
+                                'Belum ada aktivitas',
+                                style: TextStyle(color: Colors.grey),
+                              )
+                            : ListView.builder(
+                                itemCount: _controller.history.length,
+                                itemBuilder: (context, index) {
+                                  final entries = _controller.history.reversed.toList();
+                                  final activity = entries[index];
+                                  final lower = activity.toLowerCase();
+                                  Color color = Colors.black;
+                                  if (lower.contains('tambah') || lower.contains('menambah')) {
+                                    color = Colors.green;
+                                  } else if (lower.contains('kurang') || lower.contains('mengurangi')) {
+                                    color = Colors.red;
+                                  }
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 6),
+                                    child: Text(
+                                      activity,
+                                      style: TextStyle(fontSize: 14, color: color),
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: _controller.history.isEmpty
-                        ? const Text(
-                            'Belum ada aktivitas',
-                            style: TextStyle(color: Colors.grey),
-                          )
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: _controller.history
-                                .asMap()
-                                .entries
-                                .map((entry) {
-                              String activity = entry.value;
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 5),
-                                child: Text(
-                                  activity,
-                                  style: const TextStyle(fontSize: 14),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                  ),
-                ],
+                ),
               ),
             ),
             const SizedBox(height: 20),
