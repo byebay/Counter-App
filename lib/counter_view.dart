@@ -67,10 +67,10 @@ class _CounterViewState extends State<CounterView> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
             const Text("Total Hitungan:"),
             Text('${_controller.value}', style: const TextStyle(fontSize: 40)),
-            const SizedBox(height: 40),
+            const SizedBox(height: 10),
             // Section untuk mengatur Step
             Container(
               padding: const EdgeInsets.all(20),
