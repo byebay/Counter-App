@@ -1,20 +1,32 @@
 import 'package:flutter/material.dart';
-import 'counter_controller.dart';
+import 'package:logbook_app_001/features/logbook/counter_controller.dart';
+import 'package:logbook_app_001/features/onboarding/onboarding_view.dart';
 
 class CounterView extends StatefulWidget {
-  const CounterView({super.key});
+  final String username;
+
+  const CounterView({super.key, required this.username});
+
   @override
   State<CounterView> createState() => _CounterViewState();
 }
 
 class _CounterViewState extends State<CounterView> {
-  final CounterController _controller = CounterController();
+  late final CounterController _controller;
   late TextEditingController _stepController;
 
   @override
   void initState() {
     super.initState();
+    _controller = CounterController(username: widget.username);
     _stepController = TextEditingController(text: '${_controller.step}');
+
+    // Load persisted counter & history for this user
+    _controller.loadFromStorage().then((_) {
+      // update step controller and refresh UI
+      _stepController.text = '${_controller.step}';
+      setState(() {});
+    });
   }
 
   @override
@@ -63,11 +75,55 @@ class _CounterViewState extends State<CounterView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("LogBook: SRP Version")),
+      appBar: AppBar(
+        title: Text("Logbook: ${widget.username}"),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              // 1. Munculkan Dialog Konfirmasi
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text("Konfirmasi Logout"),
+                    content: const Text("Apakah Anda yakin? Data yang belum disimpan mungkin akan hilang."),
+                    actions: [
+                      // Tombol Batal
+                      TextButton(
+                        onPressed: () => Navigator.pop(context), // Menutup dialog saja
+                        child: const Text("Batal"),
+                      ),
+                      // Tombol Ya, Logout
+                      TextButton(
+                        onPressed: () {
+                          // Menutup dialog
+                          Navigator.pop(context);
+                          
+                          // 2. Navigasi kembali ke Onboarding (Membersihkan Stack)
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (context) => const OnboardingView()),
+                            (route) => false,
+                          );
+                        },
+                        child: const Text("Ya, Keluar", style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
             const SizedBox(height: 30),
+            Text("Selamat Datang, ${widget.username}!"),
+            const SizedBox(height: 20),
             const Text("Total Hitungan:"),
             Text('${_controller.value}', style: const TextStyle(fontSize: 40)),
             const SizedBox(height: 10),
@@ -157,7 +213,7 @@ class _CounterViewState extends State<CounterView> {
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
-                      Container(
+                      SizedBox(
                         height: 180,
                         width: double.infinity,
                         child: _controller.history.isEmpty
