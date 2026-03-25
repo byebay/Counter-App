@@ -1,19 +1,29 @@
-// login_controller.dart
+import 'package:logbook_app_001/features/logbook/models/user_model.dart';
+
 class LoginController {
-  // Database sederhana (Hardcoded) untuk multiple users
-  // Pastikan ada minimal 2 akun berbeda
-  final Map<String, String> _users = {
-    'admin': 'admin123',
-    'guest': 'guest123',
+  final Map<String, Map<String, String>> _users = {
+    'admin': {'password': 'admin123', 'role': 'Ketua',   'id': 'user_1', 'teamId': 'team_A'},
+    'guest': {'password': 'guest123', 'role': 'Anggota', 'id': 'user_2', 'teamId': 'team_A'},
   };
 
-  // Fungsi pengecekan (Logic-Only)
-  // Mengembalikan true jika username ada dan password cocok
-  bool login(String username, String password) {
-    if (!_users.containsKey(username)) return false;
-    return _users[username] == password;
+  UserModel? _currentUser;
+  UserModel? get currentUser => _currentUser;
+
+  UserModel? login(String username, String password) {
+    if (!_users.containsKey(username)) return null;
+    final data = _users[username]!;
+    if (data['password'] != password) return null;
+
+    _currentUser = UserModel(
+      id: data['id']!,
+      username: username,
+      role: data['role']!,
+      teamId: data['teamId'],
+    );
+    return _currentUser;
   }
 
-  // Opsional: expose list of users (read-only)
-  Map<String, String> get users => Map.unmodifiable(_users);
+  void logout() => _currentUser = null;
+
+  Map<String, Map<String, String>> get users => Map.unmodifiable(_users);
 }

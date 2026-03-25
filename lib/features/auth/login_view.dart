@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 // Import Controller milik sendiri (masih satu folder)
 import 'package:logbook_app_001/features/auth/login_controller.dart';
 // Import View dari fitur lain (Logbook) untuk navigasi
-import 'package:logbook_app_001/features/logbook/counter_view.dart';
 import 'package:logbook_app_001/features/onboarding/onboarding_view.dart';
 import 'dart:async';
 
@@ -25,12 +24,11 @@ class _LoginViewState extends State<LoginView> {
   int _remainingSeconds = 0;
 
   void _handleLogin() {
-    if (_isLocked) return; // safety
+    if (_isLocked) return;
 
     String user = _userController.text.trim();
     String pass = _passController.text;
 
-    // Validasi input kosong
     if (user.isEmpty || pass.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Username dan Password tidak boleh kosong")),
@@ -38,17 +36,11 @@ class _LoginViewState extends State<LoginView> {
       return;
     }
 
-    bool isSuccess = _controller.login(user, pass);
+    final loggedInUser = _controller.login(user, pass);
 
-    if (isSuccess) {
-      // Reset attempts on success
+    if (loggedInUser != null) {
       _attempts = 0;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CounterView(username: user),
-        ),
-      );
+      Navigator.pushReplacementNamed(context, '/logs', arguments: loggedInUser);
     } else {
       _attempts += 1;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -56,7 +48,6 @@ class _LoginViewState extends State<LoginView> {
       );
 
       if (_attempts >= 3) {
-        // Lock selama 10 detik
         setState(() {
           _isLocked = true;
           _remainingSeconds = 10;
@@ -86,51 +77,121 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Login Gatekeeper")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _userController,
-              decoration: const InputDecoration(labelText: "Username"),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _passController,
-              obscureText: _obscure, // Menyembunyikan teks password
-              decoration: InputDecoration(
-                labelText: "Password",
-                suffixIcon: IconButton(
-                  icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
-                  onPressed: () => setState(() => _obscure = !_obscure),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            children: [
+              const SizedBox(height: 60),
+
+              // Title
+              const Icon(Icons.lock_outline, size: 80),
+              const SizedBox(height: 16),
+              const Text(
+                "Selamat Datang",
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isLocked ? null : _handleLogin,
-                child: _isLocked
-                    ? Text('Terkunci ($_remainingSeconds)')
-                    : const Text('Masuk'),
+              const SizedBox(height: 8),
+              const Text(
+                "Silakan login untuk melanjutkan",
+                style: TextStyle(color: Colors.grey),
               ),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () {
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => const OnboardingView()),
-                    (route) => false,
-                  );
-                },
-                child: const Text('Kembali'),
+
+              const SizedBox(height: 40),
+
+              // Card Login
+              Card(
+                elevation: 6,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _userController,
+                        decoration: InputDecoration(
+                          labelText: "Username",
+                          prefixIcon: const Icon(Icons.person),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _passController,
+                        obscureText: _obscure,
+                        decoration: InputDecoration(
+                          labelText: "Password",
+                          prefixIcon: const Icon(Icons.lock),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscure
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                            ),
+                            onPressed: () =>
+                                setState(() => _obscure = !_obscure),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Login Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: _isLocked ? null : _handleLogin,
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: _isLocked
+                              ? Text("Terkunci ($_remainingSeconds)")
+                              : const Text(
+                                  "Masuk",
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const OnboardingView(),
+                              ),
+                              (route) => false,
+                            );
+                          },
+                          child: const Text(
+                            "Kembali",
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
