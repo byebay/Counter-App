@@ -19,9 +19,10 @@ class MongoService {
   // Ganti checkConnectivity() dengan cek socket langsung
   Future<bool> _isInternetAvailable() async {
     try {
-      final result = await InternetAddress.lookup('google.com')
-          .timeout(const Duration(seconds: 3));
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+      final client = HttpClient();
+      final request = await client.getUrl(Uri.parse('https://www.google.com'));
+      final response = await request.close().timeout(Duration(seconds: 5));
+      return response.statusCode == 200;
     } catch (e) {
       print('[MONGO] Internet check failed: $e');
       return false;
